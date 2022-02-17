@@ -25,6 +25,10 @@ import {
 import { Track } from "./track";
 import { Dots } from "./dots";
 import { PrevArrow, NextArrow } from "./arrows";
+import {
+  AccessibilityInstructions,
+  AccessibilityAutoPlayToggle
+} from "./accessibility/accessiblity-components";
 import ResizeObserver from "resize-observer-polyfill";
 
 export class InnerSlider extends React.Component {
@@ -304,7 +308,8 @@ export class InnerSlider extends React.Component {
   };
   checkImagesLoad = () => {
     let images =
-      (this.list && this.list.querySelectorAll &&
+      (this.list &&
+        this.list.querySelectorAll &&
         this.list.querySelectorAll(".slick-slide img")) ||
       [];
     let imagesCount = images.length,
@@ -611,7 +616,10 @@ export class InnerSlider extends React.Component {
     this.props.autoplay &&
     this.state.autoplaying === "focused" &&
     this.autoPlay("blur");
-
+  onHandleAccessibilityAutoPlayToggle = () =>
+    this.props.autoplay && this.state.autoplaying === "playing"
+      ? this.pause("paused")
+      : this.autoPlay();
   render = () => {
     var className = classnames("slick-slider", this.props.className, {
       "slick-vertical": this.props.vertical,
@@ -641,16 +649,20 @@ export class InnerSlider extends React.Component {
       "unslick",
       "centerPadding",
       "targetSlide",
-      "useCSS"
+      "useCSS",
+      "ac360"
     ]);
-    const { pauseOnHover } = this.props;
+    const { pauseOnHover, accessibility, ac360Accessibility } = this.props;
     trackProps = {
       ...trackProps,
       onMouseEnter: pauseOnHover ? this.onTrackOver : null,
       onMouseLeave: pauseOnHover ? this.onTrackLeave : null,
       onMouseOver: pauseOnHover ? this.onTrackOver : null,
       focusOnSelect:
-        this.props.focusOnSelect && this.clickable ? this.selectHandler : null
+        this.props.focusOnSelect && this.clickable ? this.selectHandler : null,
+      showAccesibilityRole: accessibility && ac360Accessibility,
+      accesibilityRegion:
+        accessibility && ac360Accessibility && this.props.regionLabel
     };
 
     var dots;
@@ -736,7 +748,10 @@ export class InnerSlider extends React.Component {
       onTouchMove: this.state.dragging && touchMove ? this.swipeMove : null,
       onTouchEnd: touchMove ? this.touchEnd : null,
       onTouchCancel: this.state.dragging && touchMove ? this.swipeEnd : null,
-      onKeyDown: this.props.accessibility ? this.keyHandler : null
+      onKeyDown:
+        this.props.accessibility && !this.props.ac360Accessibility
+          ? this.keyHandler
+          : null
     };
 
     let innerSliderProps = {
@@ -749,8 +764,30 @@ export class InnerSlider extends React.Component {
       listProps = { className: "slick-list" };
       innerSliderProps = { className };
     }
+
+    const showAccessibilityInstructions =
+      this.props.accessibility &&
+      this.props.instructionsText != null &&
+      this.props.instructionsText != "";
+
+    const showAccessibilityPause =
+      this.props.accessibility &&
+      this.props.autoplay &&
+      this.props.useAutoplayToggleButton;
+
     return (
       <div {...innerSliderProps}>
+        {showAccessibilityInstructions && (
+          <AccessibilityInstructions
+            instructions={this.props.instructionsText}
+          />
+        )}
+        {showAccessibilityPause && (
+          <AccessibilityAutoPlayToggle
+            isAutoPlaying={this.state.autoplaying === "playing"}
+            onToggle={this.onHandleAccessibilityAutoPlayToggle}
+          />
+        )}
         {!this.props.unslick ? prevArrow : ""}
         <div ref={this.listRefHandler} {...listProps}>
           <Track ref={this.trackRefHandler} {...trackProps}>

@@ -116,15 +116,33 @@ const renderSlides = spec => {
     let childStyle = getSlideStyle({ ...spec, index });
     let slideClass = child.props.className || "";
     let slideClasses = getSlideClasses({ ...spec, index });
+    const slidesAccessibility = {
+      ...(spec.showAccesibilityRole && {
+        role: "group",
+        "aria-label": `slide ${index}`
+      }),
+      ...(!spec.ac360Accessibility && {
+        "aria-hidden": !slideClasses["slick-active"]
+      }),
+      ...(spec.ac360Accessibility &&
+        !slideClasses["slick-active"] && {
+          "aria-hidden": true
+        }),
+      tabIndex: -1
+    };
+
     // push a cloned element of the desired slide
     slides.push(
       React.cloneElement(child, {
         key: "original" + getKey(child, index),
         "data-index": index,
+        ...slidesAccessibility,
         className: classnames(slideClasses, slideClass),
-        tabIndex: "-1",
-        "aria-hidden": !slideClasses["slick-active"],
-        style: { outline: "none", ...(child.props.style || {}), ...childStyle },
+        style: {
+          outline: "none",
+          ...(child.props.style || {}),
+          ...childStyle
+        },
         onClick: e => {
           child.props && child.props.onClick && child.props.onClick(e);
           if (spec.focusOnSelect) {
@@ -146,13 +164,22 @@ const renderSlides = spec => {
           child = elem;
         }
         slideClasses = getSlideClasses({ ...spec, index: key });
+        const preCloneSlidesAccessibility = {
+          ...(!spec.ac360Accessibility && {
+            "aria-hidden": !slideClasses["slick-active"]
+          }),
+          ...(spec.ac360Accessibility &&
+            !slideClasses["slick-active"] && {
+              "aria-hidden": true
+            }),
+          tabIndex: -1
+        };
         preCloneSlides.push(
           React.cloneElement(child, {
             key: "precloned" + getKey(child, key),
             "data-index": key,
-            tabIndex: "-1",
             className: classnames(slideClasses, slideClass),
-            "aria-hidden": !slideClasses["slick-active"],
+            ...preCloneSlidesAccessibility,
             style: { ...(child.props.style || {}), ...childStyle },
             onClick: e => {
               child.props && child.props.onClick && child.props.onClick(e);
@@ -170,13 +197,22 @@ const renderSlides = spec => {
           child = elem;
         }
         slideClasses = getSlideClasses({ ...spec, index: key });
+        const postCloneSlidesAccessibility = {
+          ...(!spec.ac360Accessibility && {
+            "aria-hidden": !slideClasses["slick-active"]
+          }),
+          ...(spec.ac360Accessibility &&
+            !slideClasses["slick-active"] && {
+              "aria-hidden": true
+            }),
+          tabIndex: -1
+        };
         postCloneSlides.push(
           React.cloneElement(child, {
             key: "postcloned" + getKey(child, key),
             "data-index": key,
-            tabIndex: "-1",
             className: classnames(slideClasses, slideClass),
-            "aria-hidden": !slideClasses["slick-active"],
+            ...postCloneSlidesAccessibility,
             style: { ...(child.props.style || {}), ...childStyle },
             onClick: e => {
               child.props && child.props.onClick && child.props.onClick(e);
@@ -206,14 +242,28 @@ export class Track extends React.PureComponent {
 
   render() {
     const slides = renderSlides(this.props);
-    const { onMouseEnter, onMouseOver, onMouseLeave } = this.props;
+    const {
+      onMouseEnter,
+      onMouseOver,
+      onMouseLeave,
+      accesibilityRegion
+    } = this.props;
     const mouseEvents = { onMouseEnter, onMouseOver, onMouseLeave };
+    const accessibility = {
+      ...(!!accesibilityRegion && {
+        role: "region",
+        "aria-label": accesibilityRegion,
+        tabIndex: -1
+      })
+    };
+
     return (
       <div
         ref={this.handleRef}
         className="slick-track"
         style={this.props.trackStyle}
         {...mouseEvents}
+        {...accessibility}
       >
         {slides}
       </div>
