@@ -6,7 +6,6 @@ demos/*
 demos1
 TODO.md
 npm-debug.log
-lib
 *.sublime-*
 .idea
 dist
@@ -19,3 +18,5 @@ docs/fonts/
 docs/ajax-loader.gif
 package-lock.json
 .DS_Store
+docs
+examples
